@@ -1,0 +1,130 @@
+<html lang="en">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Vue-Quiz-App</title>
+</head>
+<body>
+      
+        <div id="app" class="px-10 py-8 text-white bg-gray-800">
+                 <h2 class="text-4xl text-center mb-6">{{ message }}</h2>
+                 <div v-if="quiz.length == 0">
+                        <p>Loading...</p>
+                 </div>
+                <div v-else v-for="a in quiz" class="border-b pb-4 mb-2">
+                         <div v-html="a.question"></div>
+                        <div class="md:flex justify-start gap-4 text-red-400">
+                                <div v-for="(option, optionIndex) in a.options" class="flex justify-start">
+                                        <div class="flex gap-x-2">
+                                                <label for="" v-html="option"></label>
+                                                <input type="radio" :value="option" v-model="a.selectedOption">
+                                        </div>             
+                                </div>
+                        </div>
+                        
+                </div>
+                <div style="margin: 0 auto;">
+                        <div v-if="showAnswer">
+                            You scored {{count+' out of '+quiz.length}}
+                           
+                        </div>
+                        <div v-if="showAnswer && showCorrectAnswer" v-for="(a, index) in quiz">
+                                <p>Correct Answer{{ index + 1}}: {{ a.correct_answer }}</p>
+                        </div>
+                </div>
+               
+                <div v-if="start" class="flex justify-center text-white">
+                        <button @click="calculateScore" class="bg-purple-600 px-6 py-2 rounded-lg" :disabled="!isOptionSelected" :class="{ 'cursor-not-allowed': !isOptionSelected }">submit</button>
+                </div>
+                <div v-if="!start" class="flex justify-center text-white">
+                        <button  @click="restart" class="bg-green-600 px-6 py-2 rounded-lg">Start New Quiz</button>
+                </div>
+                
+               
+        </div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script>
+
+  const app = Vue.createApp({
+    data() {
+      return {
+        message: "Welcome to Trivia Quiz",
+        count:0,
+        showAnswer:false,
+        quiz:[],
+        start:true,
+      }
+      
+    },
+    created(){
+    
+        this.startGame()
+           
+    },
+    computed: {
+    isOptionSelected() {
+                return this.quiz.some(question => question.selectedOption !== null);
+        }
+        },
+    methods:{
+                calculateScore(){
+                      
+                        this.quiz.forEach(element => {
+                                if(element.selectedOption == element.correct_answer){
+                                        this.count++
+                                }else{
+                                        this.showCorrectAnswer = true
+                                }
+                                this.showAnswer = true
+                                
+                        });
+                        this.start = false
+                },
+                startGame(){
+                        fetch('https://opentdb.com/api.php?amount=10')
+                        .then(response => response.json())
+                        .then(data => {
+                                
+                                // Map over the results array
+                                this.quiz = data.results.map(question => {
+                                // Combine incorrect_answers array with correct_answer
+                                const options = [...question.incorrect_answers, question.correct_answer];
+                                // Shuffle the options (if needed)
+                        options.sort(() => Math.random() - 0.5);
+                                // Return the modified question object
+                                return {
+                                        ...question,
+                                        options: options,
+                                        selectedOption:null,
+                                        showCorrectAnswer: false
+                                        };
+                                        });
+                                        
+                                }
+                                        
+                                );
+                                
+                },
+                restart(){
+                        this.startGame()
+                        this.start = true
+                        this.showAnswer = false
+                }
+
+        }       
+  })
+
+ app.mount('#app')
+
+</script>
+<style>
+        .cursor-not-allowed {
+        cursor: not-allowed;
+        background-color: gray;
+        }
+
+</style>
+</body>
+</html>
