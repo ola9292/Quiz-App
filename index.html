@@ -8,38 +8,44 @@
 <body>
       
         <div id="app" class="px-10 py-8 text-white bg-gray-800">
-                 <h2 class="text-4xl text-center mb-6">{{ message }}</h2>
-                 <div v-if="quiz.length == 0">
-                        <p>Loading...</p>
-                 </div>
-                <div v-else v-for="a in quiz" class="border-b pb-4 mb-2">
-                         <div v-html="a.question"></div>
-                        <div class="md:flex justify-start gap-4 text-red-400">
-                                <div v-for="(option, optionIndex) in a.options" class="flex justify-start">
-                                        <div class="flex gap-x-2">
-                                                <label for="" v-html="option"></label>
-                                                <input type="radio" :value="option" v-model="a.selectedOption">
-                                        </div>             
-                                </div>
+                <div class="h-full flex justify-center items-center" v-if="stage == 'landing'">
+                        <button class="border px-8 py-4 rounded-lg" @click="showGame">Start Quiz</button>
+                </div>
+                <div v-else>
+                        <h2 class="text-4xl text-center mb-6">{{ message }}</h2>
+                        <div v-if="quiz.length == 0">
+                               <p>Loading...</p>
                         </div>
-                        
+                       <div v-else v-for="a in quiz" class="border-b pb-4 mb-2">
+                                <div v-html="a.question"></div>
+                               <div class="md:flex justify-start gap-4 text-red-400">
+                                       <div v-for="(option, optionIndex) in a.options" class="flex justify-start">
+                                               <div class="flex gap-x-2">
+                                                       <label for="" v-html="option"></label>
+                                                       <input type="radio" :value="option" v-model="a.selectedOption">
+                                               </div>             
+                                       </div>
+                               </div>
+                               
+                       </div>
+                       <div style="margin: 0 auto;">
+                               <div v-if="showAnswer">
+                                   You scored {{count+' out of '+quiz.length}}
+                                  
+                               </div>
+                               <div v-if="showAnswer && showCorrectAnswer" v-for="(a, index) in quiz">
+                                       <p>Correct Answer{{ index + 1}}: {{ a.correct_answer }}</p>
+                               </div>
+                       </div>
+                      
+                       <div v-if="start" class="flex justify-center text-white">
+                               <button @click="calculateScore" class="bg-purple-600 px-6 py-2 rounded-lg" :disabled="!isOptionSelected" :class="{ 'cursor-not-allowed': !isOptionSelected }">submit</button>
+                       </div>
+                       <div v-if="!start" class="flex justify-center text-white">
+                               <button  @click="restart" class="bg-green-600 px-6 py-2 rounded-lg">Start New Quiz</button>
+                       </div>
                 </div>
-                <div style="margin: 0 auto;">
-                        <div v-if="showAnswer">
-                            You scored {{count+' out of '+quiz.length}}
-                           
-                        </div>
-                        <div v-if="showAnswer && showCorrectAnswer" v-for="(a, index) in quiz">
-                                <p>Correct Answer{{ index + 1}}: {{ a.correct_answer }}</p>
-                        </div>
-                </div>
-               
-                <div v-if="start" class="flex justify-center text-white">
-                        <button @click="calculateScore" class="bg-purple-600 px-6 py-2 rounded-lg" :disabled="!isOptionSelected" :class="{ 'cursor-not-allowed': !isOptionSelected }">submit</button>
-                </div>
-                <div v-if="!start" class="flex justify-center text-white">
-                        <button  @click="restart" class="bg-green-600 px-6 py-2 rounded-lg">Start New Quiz</button>
-                </div>
+
                 
                
         </div>
@@ -55,6 +61,7 @@
         showAnswer:false,
         quiz:[],
         start:true,
+        stage:'landing',
       }
       
     },
@@ -82,6 +89,10 @@
                         });
                         this.start = false
                 },
+                showGame(){
+                        this.stage = 'start';
+                        this.startGame()
+                },
                 startGame(){
                         fetch('https://opentdb.com/api.php?amount=10')
                         .then(response => response.json())
@@ -92,7 +103,7 @@
                                 // Combine incorrect_answers array with correct_answer
                                 const options = [...question.incorrect_answers, question.correct_answer];
                                 // Shuffle the options (if needed)
-                        options.sort(() => Math.random() - 0.5);
+                                options.sort(() => Math.random() - 0.5);
                                 // Return the modified question object
                                 return {
                                         ...question,
